@@ -73,18 +73,18 @@ SET
 
 ### 5. Flujo de carga de CSVs recomendado
 
-olist_customers
-olist_geolocation
-olist_orders
-olist_order_payments
-olist_order_reviews
-olist_products
-olist_sellers
-olist_order_items
+- olist_customers
+- olist_geolocation
+- olist_orders
+- olist_order_payments
+- olist_order_reviews
+- olist_products
+- olist_sellers
+- olist_order_items
 
 ### 6. Comprobación de registros
 
-Finalmente, se ha comprobado que todos los registros importados en cada tabla coinciden con el número de registros originales.
+Después, se ha comprobado que todos los registros importados en cada tabla coinciden con el número de registros originales.
 
 ```
 SELECT 'customers' AS tabla, COUNT(*) FROM olist_customers
@@ -93,3 +93,45 @@ SELECT 'geolocation' AS tabla, COUNT(*) FROM olist_geolocation
 UNION ALL
 (...)
 ```
+
+### 7. Creación de Archivos kpi_reviews y kpi_ventas
+En estos archivos se han creado diferentes vistas que permiten explorar los datos y obtener KPIs relevantes para la posterior creación de las tablas finales que se utilizarán en Python.
+
+**Archivo 04_kpi_reviews.sql:**
+- `v_reviews_avg_global`: Rating promedio global (de 1 a 5).
+- `v_reviews_avg_cat_producto`: Rating promedio por categoría de producto.
+- `v_reviews_avg_cliente`: Rating promedio por cliente.
+- `v_reviews_avg_vendedor`: Rating promedio por vendedor.
+- `v_reviews_rating_distribucion`: Distribución del rating.
+- `v_reviews_evolucion_temp`: Evolución temporal del número de reviews y la valoración promedio.  
+  Se utilizan dos subconsultas para poder relacionar la evolución mensual de reviews con la evolución mensual de pedidos.
+- `v_reviews_clientes_extremos`: Identifica los clientes más críticos y los más positivos según sus valoraciones.
+
+**Archivo 05_kpi_ventas.sql:**
+
+- `v_ventas_global`: Incluye un conjunto de KPIs generales de ventas mensuales, como número de pedidos (`num_pedidos`), importe total (`importe_total`) o número de ítems por pedido (`items_por_pedido_avg`).  
+  Se crean dos CTE (`pagos_agrupados` e `items_agrupados`) para evitar problemas de duplicación derivados de las relaciones 1–N entre `olist_orders`, `olist_order_payments` y `olist_order_items` al calcular métricas agregadas.
+- `v_ventas_por_cliente`: Incluye un conjunto de KPIs generales de ventas por cliente, como número de pedidos (`num_pedidos`), ticket promedio (`ticket_promedio`) o primera compra (`primera_compra`).  
+  Al igual que en el caso anterior, se utilizan CTE para preagrupar los datos y evitar duplicaciones por relaciones 1–N al hacer `JOIN`.
+- `v_ventas_por_producto`: Productos más vendidos y con mayor *revenue*.
+- `v_entregas_global`: Días promedio de entrega (considerando solo pedidos enviados).
+
+
+### 8. Creación de Tablas finales Python
+
+Finalmente se han creado las tablas que recogen la información de las distintas vistas de `kpi_reviews` y `kpi_ventas`. Estas tablas serán la base del análisis en Python, que incluirá modelos de predicción de ventas y de segmentación de clientes.
+
+**v_detalle_ventas_mensual:** 
+- Ventas agregadas por mes, combinando métricas de ventas, entregas y reviews.
+- Columnas: `año_mes`, `num_pedidos`, `clientes_unicos`, `sellers_unicos`, `importe_total`, `ticket_promedio`, `items_totales`, `revenue_por_item`, `dias_promedio_entrega`, `rating_avg_mensual`, `pct_pedidos_con_review`
+
+**v_detalle_clientes:** 
+- Métricas de comportamiento por cliente, incluyendo datos de pedidos, frecuencia de compra y reviews.
+- Columnas: `id_cliente_unico`, `num_pedidos`, `importe_total`, `ticket_promedio`, `primera_compra`, `ultima_compra`, `items_por_pedido_avg`, `dias_entre_compras_avg`, `num_categorias_compradas`, `num_reviews_cliente`, `ratio_pedidos_con_review`, `tipo_cliente`
+
+
+| **Vista**                  | **Nivel de agregación**      | **Origen principal**                                               | **Descripción**                                                                                 | **Campos clave**   |
+| -------------------------- | ---------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- | ------------------ |
+| `v_detalle_ventas_mensual` | Mensual (`año_mes`)          | `v_ventas_global`, `v_entregas_global`, `v_reviews_evolucion_temp` | KPIs mensuales combinando ventas, entregas y reviews.                              | `año_mes`          |
+| `v_detalle_clientes`       | Cliente (`id_cliente_unico`) | `v_ventas_por_cliente`, `v_reviews_avg_cliente`                    | Métricas de comportamiento y fidelidad del cliente. | `id_cliente_unico` |
+
