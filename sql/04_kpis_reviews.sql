@@ -90,7 +90,7 @@ FROM reviews_mensuales r
 LEFT JOIN pedidos_mensuales p ON r.año_mes = p.año_mes
 ORDER BY r.año_mes;
 
--- Clientes con más críticos y más positivos
+-- Clientes más críticos y más positivos
 CREATE OR REPLACE VIEW v_reviews_clientes_extremos AS
 SELECT 
     id_cliente_unico,
