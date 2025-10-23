@@ -12,12 +12,10 @@ SELECT
     v1.ticket_promedio,
     v1.items_totales,
     v1.revenue_por_item,
-    v2.dias_promedio_entrega,
-    v3.rating_avg_mensual,
-    v3.pct_pedidos_con_review
+    v2.rating_avg_mensual,
+    v2.pct_pedidos_con_review
 FROM v_ventas_global v1
-LEFT JOIN v_entregas_global v2 ON v1.año_mes = v2.año_mes
-LEFT JOIN v_reviews_evolucion_temp v3 ON v1.año_mes = v3.año_mes
+LEFT JOIN v_reviews_evolucion_temp v2 ON v1.año_mes = v2.año_mes
 ;
 
     
