@@ -21,7 +21,7 @@ GROUP BY order_id
 SELECT 
 	DATE_FORMAT(o.order_purchase_timestamp, '%Y-%m') AS año_mes, 
     COUNT(DISTINCT o.order_id) AS num_pedidos,
-	COUNT(c.customer_unique_id) AS clientes_unicos,
+	COUNT(DISTINCT c.customer_unique_id) AS clientes_unicos,
     SUM(p.pago_total) AS importe_total,
     ROUND(SUM(p.pago_total) / COUNT(DISTINCT o.order_id), 2) AS ticket_promedio,
 	SUM(i.sellers_por_pedido) AS sellers_unicos,
