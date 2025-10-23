@@ -114,7 +114,6 @@ En estos archivos se han creado diferentes vistas que permiten explorar los dato
 - `v_ventas_por_cliente`: Incluye un conjunto de KPIs generales de ventas por cliente, como número de pedidos (`num_pedidos`), ticket promedio (`ticket_promedio`) o primera compra (`primera_compra`).  
   Al igual que en el caso anterior, se utilizan CTE para preagrupar los datos y evitar duplicaciones por relaciones 1–N al hacer `JOIN`.
 - `v_ventas_por_producto`: Productos más vendidos y con mayor *revenue*.
-- `v_entregas_global`: Días promedio de entrega (considerando solo pedidos enviados).
 
 
 ### 8. Creación de Tablas finales Python
@@ -123,7 +122,7 @@ Finalmente se han creado las tablas que recogen la información de las distintas
 
 **v_detalle_ventas_mensual:** 
 - Ventas agregadas por mes, combinando métricas de ventas, entregas y reviews.
-- Columnas: `año_mes`, `num_pedidos`, `clientes_unicos`, `sellers_unicos`, `importe_total`, `ticket_promedio`, `items_totales`, `revenue_por_item`, `dias_promedio_entrega`, `rating_avg_mensual`, `pct_pedidos_con_review`
+- Columnas: `año_mes`, `num_pedidos`, `clientes_unicos`, `sellers_unicos`, `importe_total`, `ticket_promedio`, `items_totales`, `revenue_por_item`, `rating_avg_mensual`, `pct_pedidos_con_review`
 
 **v_detalle_clientes:** 
 - Métricas de comportamiento por cliente, incluyendo datos de pedidos, frecuencia de compra y reviews.
@@ -132,6 +131,6 @@ Finalmente se han creado las tablas que recogen la información de las distintas
 
 | **Vista**                  | **Nivel de agregación**      | **Origen principal**                                               | **Descripción**                                                                                 | **Campos clave**   |
 | -------------------------- | ---------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- | ------------------ |
-| `v_detalle_ventas_mensual` | Mensual (`año_mes`)          | `v_ventas_global`, `v_entregas_global`, `v_reviews_evolucion_temp` | KPIs mensuales combinando ventas, entregas y reviews.                              | `año_mes`          |
+| `v_detalle_ventas_mensual` | Mensual (`año_mes`)          | `v_ventas_global`, `v_reviews_evolucion_temp` | KPIs mensuales combinando ventas y reviews.                              | `año_mes`          |
 | `v_detalle_clientes`       | Cliente (`id_cliente_unico`) | `v_ventas_por_cliente`, `v_reviews_avg_cliente`                    | Métricas de comportamiento y fidelidad del cliente. | `id_cliente_unico` |
 
