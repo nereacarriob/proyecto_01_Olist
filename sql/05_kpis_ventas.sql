@@ -80,12 +80,3 @@ SELECT
     ROUND(SUM(price) / COUNT(order_item_id), 2) AS revenue_por_producto
 FROM olist_order_items
 GROUP BY product_id;
-
--- Entregas 
-CREATE OR REPLACE VIEW v_entregas_global AS 
-SELECT
-	DATE_FORMAT(order_purchase_timestamp, '%Y-%m') AS año_mes, 
-    AVG(DATEDIFF(order_delivered_customer_date, order_purchase_timestamp)) AS dias_promedio_entrega
-FROM olist_orders
-WHERE order_status = 'delivered'
-GROUP BY año_mes;
