@@ -32,6 +32,7 @@ FROM olist_orders o
 LEFT JOIN pagos_agrupados p ON o.order_id = p.order_id
 LEFT JOIN items_agrupados i ON o.order_id = i.order_id
 LEFT JOIN olist_customers c ON o.customer_id = c.customer_id
+WHERE o.order_status = 'delivered'
 GROUP BY año_mes;
 
 -- Nº pedidos por cliente:
@@ -46,7 +47,7 @@ items_agrupados AS (
 SELECT 
 	i.order_id,
 	COUNT(i.order_item_id) AS items_por_pedido,
-    COUNT(DISTINCT p.product_category_name) AS num_categorias
+    COUNT(DISTINCT COALESCE(p.product_category_name, 'sin_categoria')) AS num_categorias
 FROM olist_order_items i
 LEFT JOIN olist_products p ON i.product_id = p.product_id
 GROUP BY order_id
@@ -67,16 +68,20 @@ FROM olist_customers c
 LEFT JOIN olist_orders o ON c.customer_id = o.customer_id
 LEFT JOIN pagos_agrupados p ON o.order_id = p.order_id
 LEFT JOIN items_agrupados i ON o.order_id = i.order_id
+WHERE o.order_status = 'delivered'
 GROUP BY id_cliente_unico;
 
 
 -- Productos más vendidos y con mayor revenue:
 CREATE OR REPLACE VIEW v_ventas_por_producto AS
 SELECT 
-	product_id, 
-    COUNT(DISTINCT order_id) AS num_pedidos, 
-    COUNT(order_item_id) AS num_unidades_vendidas,
-    SUM(price) AS importe_total, 
-    ROUND(SUM(price) / COUNT(order_item_id), 2) AS revenue_por_producto
-FROM olist_order_items
-GROUP BY product_id;
+    i.product_id, 
+    COUNT(DISTINCT i.order_id) AS num_pedidos, 
+    COUNT(i.order_item_id) AS num_unidades_vendidas,
+    SUM(i.price) AS importe_total, 
+    ROUND(SUM(i.price) / COUNT(i.order_item_id), 2) AS revenue_por_producto
+FROM olist_order_items AS i
+JOIN olist_orders AS o
+    ON i.order_id = o.order_id
+WHERE o.order_status = 'delivered'
+GROUP BY i.product_id;
