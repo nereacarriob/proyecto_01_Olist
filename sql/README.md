@@ -95,10 +95,11 @@ UNION ALL
 ```
 
 ### 7. Creación de Archivos kpi_reviews y kpi_ventas
-En estos archivos se han creado diferentes vistas que permiten explorar los datos y obtener KPIs relevantes para la posterior creación de las tablas finales que se utilizarán en Python.
+En estos archivos se han creado diferentes vistas que permiten explorar los datos y obtener KPIs relevantes para la posterior creación de las tablas finales que se utilizarán en Python. 
+Nota: En varias de las siguientes vistas se ha filtrado por (`order_status`) = 'delivered' para asegurar que únicamente incluimos datos de ventas completadas con éxito, evitando errores en importes, nº de items o nº de reviews.
 
 **Archivo 04_kpi_reviews.sql:**
-- `v_reviews_avg_global`: Rating promedio global (de 1 a 5).
+- `v_reviews_avg_global`: Rating promedio global (de 1 a 5). 
 - `v_reviews_avg_cat_producto`: Rating promedio por categoría de producto.
 - `v_reviews_avg_cliente`: Rating promedio por cliente.
 - `v_reviews_avg_vendedor`: Rating promedio por vendedor.
@@ -111,8 +112,9 @@ En estos archivos se han creado diferentes vistas que permiten explorar los dato
 
 - `v_ventas_global`: Incluye un conjunto de KPIs generales de ventas mensuales, como número de pedidos (`num_pedidos`), importe total (`importe_total`) o número de ítems por pedido (`items_por_pedido_avg`).  
   Se crean dos CTE (`pagos_agrupados` e `items_agrupados`) para evitar problemas de duplicación derivados de las relaciones 1–N entre `olist_orders`, `olist_order_payments` y `olist_order_items` al calcular métricas agregadas.
-- `v_ventas_por_cliente`: Incluye un conjunto de KPIs generales de ventas por cliente, como número de pedidos (`num_pedidos`), ticket promedio (`ticket_promedio`) o primera compra (`primera_compra`).  
+- `v_ventas_por_cliente`: Incluye un conjunto de KPIs generales de ventas por cliente, como número de pedidos (`num_pedidos`), ticket promedio (`ticket_promedio`) o primera compra (`primera_compra`). 
   Al igual que en el caso anterior, se utilizan CTE para preagrupar los datos y evitar duplicaciones por relaciones 1–N al hacer `JOIN`.
+  Para calcular el número de categorías, sustituimos los NULL existentes en la columna (`product_category_name`) (que los hay) por un valor válido, "sin_categoria". De esta manera, al hacer COUNT todos los pedidos cuentan con al menos una categoría asignada. Así evitamos que, al intentar contar NULL, (`num_categorias`) fuese igual a 0 para algunos clientes.
 - `v_ventas_por_producto`: Productos más vendidos y con mayor *revenue*.
 
 
