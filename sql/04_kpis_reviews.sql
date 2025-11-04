@@ -8,7 +8,8 @@ SELECT
     COUNT(r.review_id) AS num_reviews_global,
 	COUNT(r.review_id) / COUNT(o.order_id) * 1.0 AS ratio_pedidos_con_review
 FROM olist_orders o
-LEFT JOIN olist_order_reviews r ON r.order_id = o.order_id;
+LEFT JOIN olist_order_reviews r ON r.order_id = o.order_id
+WHERE o.order_status = 'delivered';
 
 -- Rating promedio por categoría de producto:
 
@@ -20,6 +21,8 @@ SELECT
 FROM olist_products p
 JOIN olist_order_items i ON p.product_id = i.product_id 
 JOIN olist_order_reviews r ON i.order_id = r.order_id
+JOIN olist_orders o ON i.order_id = o.order_id
+WHERE o.order_status = 'delivered'
 GROUP BY categoria_producto;
     
 -- Rating promedio por cliente:
@@ -34,7 +37,8 @@ SELECT
 FROM olist_customers c
 JOIN olist_orders o ON c.customer_id = o.customer_id
 LEFT JOIN olist_order_reviews r ON o.order_id = r.order_id
-GROUP BY customer_unique_id;
+WHERE o.order_status = 'delivered'
+GROUP BY id_cliente_unico;
 
 -- Rating promedio por vendedor:
 
@@ -47,6 +51,8 @@ SELECT
 FROM olist_sellers s
 JOIN olist_order_items i ON s.seller_id = i.seller_id
 JOIN olist_order_reviews r ON i.order_id = r.order_id
+JOIN olist_orders o ON i.order_id = o.order_id
+WHERE o.order_status = 'delivered'
 GROUP BY s.seller_id;
 
 
@@ -65,19 +71,22 @@ ORDER BY review_score;
 
 CREATE OR REPLACE VIEW v_reviews_evolucion_temp AS
 WITH reviews_mensuales AS (
-SELECT 
-	DATE_FORMAT(review_creation_date, '%Y-%m') AS año_mes,
-    ROUND(AVG(review_score), 2) as rating_avg_mensual,
-    COUNT(*) AS num_reviews
-FROM olist_order_reviews
-GROUP BY año_mes
+	SELECT 
+		DATE_FORMAT(r.review_creation_date, '%Y-%m') AS año_mes,
+		ROUND(AVG(r.review_score), 2) AS rating_avg_mensual,
+		COUNT(*) AS num_reviews
+	FROM olist_order_reviews r
+	JOIN olist_orders o ON r.order_id = o.order_id
+	WHERE o.order_status = 'delivered'
+	GROUP BY año_mes
 ),
 pedidos_mensuales AS (
-SELECT 
-	DATE_FORMAT(order_purchase_timestamp, '%Y-%m') AS año_mes,
-    COUNT(*) AS num_pedidos
-FROM olist_orders
-GROUP BY año_mes
+	SELECT 
+		DATE_FORMAT(order_purchase_timestamp, '%Y-%m') AS año_mes,
+		COUNT(*) AS num_pedidos
+	FROM olist_orders
+	WHERE order_status = 'delivered'
+	GROUP BY año_mes
 )
 
 SELECT 
@@ -90,7 +99,7 @@ FROM reviews_mensuales r
 LEFT JOIN pedidos_mensuales p ON r.año_mes = p.año_mes
 ORDER BY r.año_mes;
 
--- Clientes más críticos y más positivos
+-- Clientes con más críticos y más positivos
 CREATE OR REPLACE VIEW v_reviews_clientes_extremos AS
 SELECT 
     id_cliente_unico,
